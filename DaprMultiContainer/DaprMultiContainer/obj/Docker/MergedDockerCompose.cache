@@ -1,0 +1,15 @@
+services:
+  myfrontend:
+    build:
+      context: C:\source\repos\テスト環境\poc-dapr\DaprMultiContainer\DaprMultiContainer
+      dockerfile: MyFrontEnd/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: https://+:443;http://+:80
+    image: myfrontend
+    ports:
+    - target: 80
+    - target: 443
+    volumes:
+    - C:\Users\s.kubo\AppData\Roaming\ASP.NET\Https:/root/.aspnet/https:ro
+version: '3.4'

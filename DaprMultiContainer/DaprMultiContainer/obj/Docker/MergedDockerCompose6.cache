@@ -1,0 +1,104 @@
+services:
+  mybackend:
+    build:
+      context: C:\source\repos\テスト環境\poc-dapr\DaprMultiContainer\DaprMultiContainer
+      dockerfile: MyBackEnd/Dockerfile
+      labels:
+        com.microsoft.created-by: visual-studio
+        com.microsoft.visual-studio.project-name: MyBackEnd
+      target: base
+    container_name: MyBackEnd
+    entrypoint: tail -f /dev/null
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
+      DOTNET_USE_POLLING_FILE_WATCHER: '1'
+      NUGET_FALLBACK_PACKAGES: /root/.nuget/fallbackpackages;/root/.nuget/fallbackpackages2
+    image: mybackend:dev
+    labels:
+      com.microsoft.visualstudio.debuggee.arguments: ' --additionalProbingPath /root/.nuget/packages
+        --additionalProbingPath /root/.nuget/fallbackpackages --additionalProbingPath
+        /root/.nuget/fallbackpackages2  "/app/bin/Debug/net6.0/MyBackEnd.dll"'
+      com.microsoft.visualstudio.debuggee.killprogram: /bin/sh -c "if PID=$$(pidof
+        dotnet); then kill $$PID; fi"
+      com.microsoft.visualstudio.debuggee.program: dotnet
+      com.microsoft.visualstudio.debuggee.workingdirectory: /app
+    ports:
+    - target: 80
+    - published: 52000
+      target: 50001
+    tty: true
+    volumes:
+    - C:\source\repos\テスト環境\poc-dapr\DaprMultiContainer\DaprMultiContainer\MyBackEnd:/app:rw
+    - C:\Users\s.kubo\vsdbg\vs2017u5:/remote_debugger:rw
+    - C:\Users\s.kubo\AppData\Roaming\ASP.NET\Https:/root/.aspnet/https:ro
+    - C:\Users\s.kubo\AppData\Roaming\Microsoft\UserSecrets:/root/.microsoft/usersecrets:ro
+    - C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages:/root/.nuget/fallbackpackages:ro
+    - C:\Program Files (x86)\Microsoft\Xamarin\NuGet:/root/.nuget/fallbackpackages2:ro
+    - C:\Users\s.kubo\.nuget\packages:/root/.nuget/packages:ro
+    - C:\source\repos\テスト環境\poc-dapr\DaprMultiContainer\DaprMultiContainer:/src:rw
+  mybackend-dapr:
+    command:
+    - ./daprd
+    - -app-id
+    - MyBackEnd
+    - -app-port
+    - '80'
+    depends_on:
+      mybackend:
+        condition: service_started
+    image: daprio/daprd:latest
+    network_mode: service:mybackend
+  myfrontend:
+    build:
+      context: C:\source\repos\テスト環境\poc-dapr\DaprMultiContainer\DaprMultiContainer
+      dockerfile: MyFrontEnd/Dockerfile
+      labels:
+        com.microsoft.created-by: visual-studio
+        com.microsoft.visual-studio.project-name: MyFrontEnd
+      target: base
+    container_name: MyFrontEnd
+    entrypoint: tail -f /dev/null
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
+      ASPNETCORE_URLS: https://+:443;http://+:80
+      DOTNET_USE_POLLING_FILE_WATCHER: '1'
+      NUGET_FALLBACK_PACKAGES: /root/.nuget/fallbackpackages;/root/.nuget/fallbackpackages2
+    image: myfrontend:dev
+    labels:
+      com.microsoft.visualstudio.debuggee.arguments: ' --additionalProbingPath /root/.nuget/packages
+        --additionalProbingPath /root/.nuget/fallbackpackages --additionalProbingPath
+        /root/.nuget/fallbackpackages2  "/app/bin/Debug/net6.0/MyFrontEnd.dll"'
+      com.microsoft.visualstudio.debuggee.killprogram: /bin/sh -c "if PID=$$(pidof
+        dotnet); then kill $$PID; fi"
+      com.microsoft.visualstudio.debuggee.program: dotnet
+      com.microsoft.visualstudio.debuggee.workingdirectory: /app
+    ports:
+    - target: 80
+    - target: 443
+    - published: 51000
+      target: 50001
+    tty: true
+    volumes:
+    - C:\source\repos\テスト環境\poc-dapr\DaprMultiContainer\DaprMultiContainer\MyFrontEnd:/app:rw
+    - C:\Users\s.kubo\vsdbg\vs2017u5:/remote_debugger:rw
+    - C:\Users\s.kubo\AppData\Roaming\ASP.NET\Https:/root/.aspnet/https:ro
+    - C:\Users\s.kubo\AppData\Roaming\Microsoft\UserSecrets:/root/.microsoft/usersecrets:ro
+    - C:\Program Files (x86)\Microsoft Visual Studio\Shared\NuGetPackages:/root/.nuget/fallbackpackages:ro
+    - C:\Program Files (x86)\Microsoft\Xamarin\NuGet:/root/.nuget/fallbackpackages2:ro
+    - C:\Users\s.kubo\.nuget\packages:/root/.nuget/packages:ro
+    - C:\source\repos\テスト環境\poc-dapr\DaprMultiContainer\DaprMultiContainer:/src:rw
+  myfrontend-dapr:
+    command:
+    - ./daprd
+    - -app-id
+    - MyFrontEnd
+    - -app-port
+    - '80'
+    depends_on:
+      myfrontend:
+        condition: service_started
+    image: daprio/daprd:latest
+    network_mode: service:myfrontend
+version: '3.4'
